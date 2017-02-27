@@ -1,0 +1,36 @@
+machine:
+  xcode:
+    version: "7.0"
+
+dependencies:
+  override:
+    - brew unlink node
+    - brew install node@4
+    - brew link node@4 --force
+    - brew install --ignore-dependencies wine
+    - brew install github-release
+    - brew install mono
+    - brew install fakeroot
+    - brew install dpkg
+    - npm install
+  cache_directories:
+    - "node_modules"
+    - "~/.electron"
+
+test:
+  override:
+    - npm test
+    - npm run integration
+  post:
+    - npm run release:
+        timeout: 12000
+    - cp release/* $CIRCLE_ARTIFACTS/
+
+deployment:
+  release:
+    tag: /v.*/
+    owner: docker
+    commands:
+      - github-release upload --user docker --repo kitematic --tag $CIRCLE_TAG --file release/Dockerix-Mac.zip --name Dockerix-$(echo $CIRCLE_TAG | cut -c2-)-Mac.zip
+      - github-release upload --user docker --repo kitematic --tag $CIRCLE_TAG --file release/Dockerix-Windows.zip --name Dockerix-$(echo $CIRCLE_TAG | cut -c2-)-Windows.zip
+      - github-release upload --user docker --repo kitematic --tag $CIRCLE_TAG --file release/Dockerix-Ubuntu.zip --name Dockerix-$(echo $CIRCLE_TAG | cut -c2-)-Ubuntu.zip
